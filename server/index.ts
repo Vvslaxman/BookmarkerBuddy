@@ -54,14 +54,21 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     // Serve static files in production
-    app.use(express.static(path.join(process.cwd(), "dist")));
+    app.use(express.static(path.join(process.cwd(), "dist", "public")));
+    
+    // Serve static assets if they exist
+    app.use("/assets", express.static(path.join(process.cwd(), "dist", "public", "assets")));
 
     // Handle SPA routing - serve index.html for all non-API routes
     app.get("*", (req, res, next) => {
       if (req.path.startsWith("/api")) {
         return next();
       }
-      res.sendFile(path.join(process.cwd(), "dist", "index.html"));
+      res.sendFile(path.join(process.cwd(), "dist", "public", "index.html"), (err) => {
+        if (err) {
+          res.status(500).send("Error loading application");
+        }
+      });
     });
   }
 
