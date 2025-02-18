@@ -7,11 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, Trash2, Tag, Edit2 } from "lucide-react";
+import { Loader2, Plus, Search, Trash2, Tag, Edit2, BarChart2, Clock, Star } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 import type { Bookmark } from "@shared/schema";
+
+type BookmarkStats = {
+  totalBookmarks: number;
+  mostAccessed: Bookmark[];
+  recentlyCreated: Bookmark[];
+  recentlyAccessed: Bookmark[];
+};
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -74,6 +82,10 @@ export default function HomePage() {
         description: "Bookmark deleted successfully",
       });
     },
+  });
+
+  const { data: stats, isLoading: isStatsLoading } = useQuery<BookmarkStats>({
+    queryKey: ["/api/bookmarks/stats"],
   });
 
   const handleTagAdd = (formState: typeof newBookmark | Bookmark) => {
@@ -140,6 +152,81 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <div className="grid gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Bookmarks</CardTitle>
+              <BarChart2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.totalBookmarks ?? 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Most Accessed</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {stats?.mostAccessed.slice(0, 3).map(bookmark => (
+                  <div key={bookmark.id} className="text-sm">
+                    <a href={bookmark.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {bookmark.title}
+                    </a>
+                    <div className="text-xs text-muted-foreground">
+                      {bookmark.accessCount} views
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Recently Added</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {stats?.recentlyCreated.slice(0, 3).map(bookmark => (
+                  <div key={bookmark.id} className="text-sm">
+                    <a href={bookmark.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {bookmark.title}
+                    </a>
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(bookmark.createdAt), 'MMM d, yyyy')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Recently Accessed</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {stats?.recentlyAccessed.slice(0, 3).map(bookmark => (
+                  <div key={bookmark.id} className="text-sm">
+                    <a href={bookmark.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {bookmark.title}
+                    </a>
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(bookmark.lastAccessedAt), 'MMM d, yyyy')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="flex justify-between items-center mb-8">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -174,7 +261,7 @@ export default function HomePage() {
                     <Input
                       id="url"
                       value={editingBookmark?.url || newBookmark.url}
-                      onChange={(e) => editingBookmark 
+                      onChange={(e) => editingBookmark
                         ? setEditingBookmark({ ...editingBookmark, url: e.target.value })
                         : setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
                       required
@@ -246,7 +333,7 @@ export default function HomePage() {
           </Dialog>
         </div>
 
-        {isLoading ? (
+        {isLoading || isStatsLoading ? (
           <div className="flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>

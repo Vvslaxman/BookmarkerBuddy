@@ -1,6 +1,6 @@
 import { users, bookmarks, type User, type InsertUser, type Bookmark, type InsertBookmark } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, ilike } from "drizzle-orm";
+import { eq, and, ilike, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -38,13 +38,30 @@ export class DatabaseStorage {
 
   async getBookmark(id: number): Promise<Bookmark | undefined> {
     const [bookmark] = await db.select().from(bookmarks).where(eq(bookmarks.id, id));
+    if (bookmark) {
+      // Update access count and last accessed timestamp
+      await db.update(bookmarks)
+        .set({
+          accessCount: sql`${bookmarks.accessCount} + 1`,
+          lastAccessedAt: new Date()
+        })
+        .where(eq(bookmarks.id, id));
+    }
     return bookmark;
   }
 
   async createBookmark(userId: number, insertBookmark: InsertBookmark): Promise<Bookmark> {
+    const now = new Date();
     const [bookmark] = await db
       .insert(bookmarks)
-      .values({ ...insertBookmark, userId })
+      .values({
+        ...insertBookmark,
+        userId,
+        createdAt: now,
+        lastAccessedAt: now,
+        lastModifiedAt: now,
+        accessCount: 0
+      })
       .returning();
     return bookmark;
   }
@@ -52,7 +69,10 @@ export class DatabaseStorage {
   async updateBookmark(id: number, updateData: Partial<InsertBookmark>): Promise<Bookmark> {
     const [bookmark] = await db
       .update(bookmarks)
-      .set(updateData)
+      .set({
+        ...updateData,
+        lastModifiedAt: new Date()
+      })
       .where(eq(bookmarks.id, id))
       .returning();
     return bookmark;
@@ -81,6 +101,46 @@ export class DatabaseStorage {
       const searchText = `${bookmark.title} ${bookmark.description} ${bookmark.tags.join(" ")}`.toLowerCase();
       return searchTerms.every(term => searchText.includes(term));
     });
+  }
+
+  async getBookmarkStats(userId: number): Promise<{
+    totalBookmarks: number;
+    mostAccessed: Bookmark[];
+    recentlyCreated: Bookmark[];
+    recentlyAccessed: Bookmark[];
+  }> {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(bookmarks)
+      .where(eq(bookmarks.userId, userId));
+
+    const mostAccessed = await db
+      .select()
+      .from(bookmarks)
+      .where(eq(bookmarks.userId, userId))
+      .orderBy(sql`${bookmarks.accessCount} DESC`)
+      .limit(5);
+
+    const recentlyCreated = await db
+      .select()
+      .from(bookmarks)
+      .where(eq(bookmarks.userId, userId))
+      .orderBy(sql`${bookmarks.createdAt} DESC`)
+      .limit(5);
+
+    const recentlyAccessed = await db
+      .select()
+      .from(bookmarks)
+      .where(eq(bookmarks.userId, userId))
+      .orderBy(sql`${bookmarks.lastAccessedAt} DESC`)
+      .limit(5);
+
+    return {
+      totalBookmarks: count,
+      mostAccessed,
+      recentlyCreated,
+      recentlyAccessed,
+    };
   }
 }
 

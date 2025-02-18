@@ -72,6 +72,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(results);
   });
 
+  // Get bookmark statistics
+  app.get("/api/bookmarks/stats", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const stats = await storage.getBookmarkStats(req.user!.id);
+    res.json(stats);
+  });
+
   // Get AI tag suggestions
   app.post("/api/tags/suggest", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

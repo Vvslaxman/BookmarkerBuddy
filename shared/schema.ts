@@ -15,6 +15,10 @@ export const bookmarks = pgTable("bookmarks", {
   title: text("title").notNull(),
   description: text("description"),
   tags: text("tags").array().notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastAccessedAt: timestamp("last_accessed_at").notNull().defaultNow(),
+  lastModifiedAt: timestamp("last_modified_at").notNull().defaultNow(),
+  accessCount: integer("access_count").notNull().default(0),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
