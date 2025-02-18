@@ -3,6 +3,10 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import helmet from "helmet";
 import path from "path";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -15,7 +19,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Request logging middleware
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log('\n🔍 Debug Log Start -------------------');
+  console.log(`📝 ${new Date().toISOString()}`);
+  console.log(`📍 ${req.method} ${req.url}`);
+  console.log('🔒 Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('📦 Body:', JSON.stringify(req.body, null, 2));
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
@@ -24,6 +33,12 @@ app.use((req, res, next) => {
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
     return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+  const originalSend = res.send;
+  res.send = function (body: any) {
+    console.log('📤 Response:', typeof body === 'string' ? body : JSON.stringify(body, null, 2));
+    console.log('🏁 Debug Log End -------------------\n');
+    return originalSend.call(this, body);
   };
 
   res.on("finish", () => {
@@ -54,21 +69,29 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     // Serve static files in production
-    app.use(express.static(path.join(process.cwd(), "dist", "public")));
-    
-    // Serve static assets if they exist
-    app.use("/assets", express.static(path.join(process.cwd(), "dist", "public", "assets")));
+    const publicPath = path.join(__dirname, '..', 'public');
+    app.use(express.static(publicPath));
 
-    // Handle SPA routing - serve index.html for all non-API routes
-    app.get("*", (req, res, next) => {
-      if (req.path.startsWith("/api")) {
-        return next();
-      }
-      res.sendFile(path.join(process.cwd(), "dist", "public", "index.html"), (err) => {
-        if (err) {
-          res.status(500).send("Error loading application");
+    // Add error handling middleware
+    app.use((err: any, req: any, res: any, next: any) => {
+      console.error('Error:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+    });
+
+    // Handle SPA routing - Fixed by adding next parameter
+    app.get('*', (req, res, next) => {
+      try {
+        if (req.path.startsWith('/api')) {
+          return next();
         }
-      });
+        const indexPath = path.join(__dirname, '..', 'public', 'index.html');
+        console.log('Serving index.html from:', indexPath);
+        res.sendFile(indexPath);
+      } catch (error) {
+        console.error('Error serving index.html:', error);
+        res.status(500).send('Error loading application');
+        next(error); // Pass error to error handling middleware
+      }
     });
   }
 
