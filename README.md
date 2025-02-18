@@ -2,6 +2,7 @@
 
 A comprehensive bookmark management application built with Next.js and secure authentication. Efficiently organize, search, and manage your digital bookmarks with advanced analytics and tagging capabilities.
 
+![Image](mainpage.png)
 
 ## Features
 
