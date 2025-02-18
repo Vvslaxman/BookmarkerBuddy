@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, Trash2, Tag, Edit2, BarChart2, Clock, Star } from "lucide-react";
+import { Loader2, Plus, Search, Trash2, Tag, Edit2, BarChart2, Clock, Star, Filter } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,7 @@ export default function HomePage() {
     tags: [] as string[],
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const { data: bookmarks, isLoading } = useQuery<Bookmark[]>({
     queryKey: ["/api/bookmarks"],
@@ -122,27 +123,46 @@ export default function HomePage() {
     }
   };
 
-  const filteredBookmarks = bookmarks?.filter(bookmark => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      bookmark.title.toLowerCase().includes(searchLower) ||
-      bookmark.description?.toLowerCase().includes(searchLower) ||
-      bookmark.tags.some(tag => tag.toLowerCase().includes(searchLower))
-    );
-  });
+  // Extract unique tags from all bookmarks
+  const allTags = useMemo(() => {
+    if (!bookmarks) return [];
+    const tagSet = new Set<string>();
+    bookmarks.forEach(bookmark => {
+      bookmark.tags.forEach(tag => tagSet.add(tag));
+    });
+    return Array.from(tagSet);
+  }, [bookmarks]);
+
+  // Filter bookmarks based on search and tags
+  const filteredBookmarks = useMemo(() => {
+    if (!bookmarks) return [];
+    return bookmarks.filter(bookmark => {
+      const matchesSearch = !search ||
+        bookmark.title.toLowerCase().includes(search.toLowerCase()) ||
+        bookmark.description?.toLowerCase().includes(search.toLowerCase()) ||
+        bookmark.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()));
+
+      const matchesTags = selectedTags.length === 0 ||
+        selectedTags.every(tag => bookmark.tags.includes(tag));
+
+      return matchesSearch && matchesTags;
+    });
+  }, [bookmarks, search, selectedTags]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Bookmarker</h1>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+            Bookmarker
+          </h1>
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">Welcome, {user?.username}</span>
             <Button
               variant="outline"
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
+              className="backdrop-blur-sm bg-white/10 hover:bg-white/20 border-0"
             >
               {logoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Logout
@@ -153,7 +173,7 @@ export default function HomePage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Bookmarks</CardTitle>
               <BarChart2 className="h-4 w-4 text-muted-foreground" />
@@ -163,7 +183,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Most Accessed</CardTitle>
               <Star className="h-4 w-4 text-muted-foreground" />
@@ -184,7 +204,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Recently Added</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -205,7 +225,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Recently Accessed</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -227,25 +247,40 @@ export default function HomePage() {
           </Card>
         </div>
 
-        <div className="flex justify-between items-center mb-8">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              className="pl-10"
-              placeholder="Search bookmarks..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div className="w-full md:w-auto flex-1 space-y-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                className="pl-10 backdrop-blur-sm bg-white/10 border-0"
+                placeholder="Search bookmarks..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allTags.map(tag => (
+                <Badge
+                  key={tag}
+                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  className="cursor-pointer hover:bg-primary/20"
+                  onClick={() => {
+                    setSelectedTags(prev =>
+                      prev.includes(tag)
+                        ? prev.filter(t => t !== tag)
+                        : [...prev, tag]
+                    );
+                  }}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            if (!open) {
-              setEditingBookmark(null);
-              setNewBookmark({ url: "", title: "", description: "", tags: [] });
-            }
-            setIsDialogOpen(open);
-          }}>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="backdrop-blur-sm bg-primary hover:bg-primary/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Bookmark
               </Button>
@@ -339,8 +374,8 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredBookmarks?.map((bookmark) => (
-              <Card key={bookmark.id}>
+            {filteredBookmarks.map((bookmark) => (
+              <Card key={bookmark.id} className="backdrop-blur-sm bg-white/10 border-0 shadow-xl hover:shadow-2xl transition-all">
                 <CardHeader className="flex flex-row items-start justify-between space-y-0">
                   <div>
                     <CardTitle className="line-clamp-1">
@@ -348,7 +383,7 @@ export default function HomePage() {
                         href={bookmark.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:underline"
+                        className="hover:underline text-primary"
                       >
                         {bookmark.title}
                       </a>
@@ -362,6 +397,7 @@ export default function HomePage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(bookmark)}
+                      className="hover:bg-white/20"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -370,6 +406,7 @@ export default function HomePage() {
                       size="icon"
                       onClick={() => deleteMutation.mutate(bookmark.id)}
                       disabled={deleteMutation.isPending}
+                      className="hover:bg-white/20"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -383,7 +420,7 @@ export default function HomePage() {
                   )}
                   <div className="flex flex-wrap gap-2">
                     {bookmark.tags.map((tag, i) => (
-                      <Badge key={i} variant="secondary">
+                      <Badge key={i} variant="secondary" className="bg-primary/10">
                         {tag}
                       </Badge>
                     ))}
