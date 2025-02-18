@@ -252,7 +252,7 @@ export default function HomePage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                className="pl-10 backdrop-blur-sm bg-white/10 border-0"
+                className="pl-10 backdrop-blur-sm bg-white/10 border border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors"
                 placeholder="Search bookmarks..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

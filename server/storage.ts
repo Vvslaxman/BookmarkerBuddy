@@ -109,8 +109,8 @@ export class DatabaseStorage {
     recentlyCreated: Bookmark[];
     recentlyAccessed: Bookmark[];
   }> {
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)` })
+    const [count] = await db
+      .select({ value: sql<number>`count(*)::int` })
       .from(bookmarks)
       .where(eq(bookmarks.userId, userId));
 
@@ -136,7 +136,7 @@ export class DatabaseStorage {
       .limit(5);
 
     return {
-      totalBookmarks: count,
+      totalBookmarks: count.value,
       mostAccessed,
       recentlyCreated,
       recentlyAccessed,
