@@ -69,7 +69,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     await setupVite(app, server);
   } else {
     // Serve static files in production
-    const publicPath = path.join(__dirname, '..', 'public');
+    const publicPath = path.join(__dirname, '..','dist', 'public');
     app.use(express.static(publicPath));
 
     // Add error handling middleware
@@ -84,9 +84,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
         if (req.path.startsWith('/api')) {
           return next();
         }
-        const indexPath = path.join(__dirname, '..', 'public', 'index.html');
+        const indexPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
         console.log('Serving index.html from:', indexPath);
-        res.sendFile(indexPath);
+        res.sendFile(indexPath, (err) => {
+          if (err) {
+            console.error('Error sending index.html:', err);
+            next(err);
+          }
+        });
       } catch (error) {
         console.error('Error serving index.html:', error);
         res.status(500).send('Error loading application');
