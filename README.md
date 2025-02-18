@@ -156,6 +156,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Drizzle ORM](https://orm.drizzle.team) for the database ORM
 - [TanStack Query](https://tanstack.com/query) for data fetching
 
-## Support
+## Contact
 
-For support, email support@bookmarker.com or open an issue in the repository.
+For any questions or suggestions, please open an issue or contact [Vvslaxman](mailto:vvslaxman14@gmail.com).
