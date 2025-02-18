@@ -2,6 +2,10 @@
 
 A comprehensive bookmark management application built with Next.js and secure authentication. Efficiently organize, search, and manage your digital bookmarks with advanced analytics and tagging capabilities.
 
+## Live Demo
+
+Check out the live demo: [dApp - Supply Chain Decentralization](https://cometforge-production.up.railway.app/)
+
 ![Image](mainpage.png)
 
 ## Features
