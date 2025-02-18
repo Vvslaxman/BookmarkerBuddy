@@ -1,83 +1,87 @@
-import { IStorage } from "./storage";
-import { User, InsertUser, Bookmark, InsertBookmark } from "@shared/schema";
+import { users, bookmarks, type User, type InsertUser, type Bookmark, type InsertBookmark } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, ilike } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private bookmarks: Map<number, Bookmark>;
-  private currentUserId: number;
-  private currentBookmarkId: number;
+export class DatabaseStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.bookmarks = new Map();
-    this.currentUserId = 1;
-    this.currentBookmarkId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user = { id, ...insertUser };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getBookmarks(userId: number): Promise<Bookmark[]> {
-    return Array.from(this.bookmarks.values()).filter(
-      (bookmark) => bookmark.userId === userId,
-    );
+    return await db.select().from(bookmarks).where(eq(bookmarks.userId, userId));
   }
 
   async getBookmark(id: number): Promise<Bookmark | undefined> {
-    return this.bookmarks.get(id);
+    const [bookmark] = await db.select().from(bookmarks).where(eq(bookmarks.id, id));
+    return bookmark;
   }
 
   async createBookmark(userId: number, insertBookmark: InsertBookmark): Promise<Bookmark> {
-    const id = this.currentBookmarkId++;
-    const bookmark = { id, userId, ...insertBookmark };
-    this.bookmarks.set(id, bookmark);
+    const [bookmark] = await db
+      .insert(bookmarks)
+      .values({ ...insertBookmark, userId })
+      .returning();
     return bookmark;
   }
 
   async updateBookmark(id: number, updateData: Partial<InsertBookmark>): Promise<Bookmark> {
-    const bookmark = this.bookmarks.get(id);
-    if (!bookmark) throw new Error("Bookmark not found");
-    
-    const updatedBookmark = { ...bookmark, ...updateData };
-    this.bookmarks.set(id, updatedBookmark);
-    return updatedBookmark;
+    const [bookmark] = await db
+      .update(bookmarks)
+      .set(updateData)
+      .where(eq(bookmarks.id, id))
+      .returning();
+    return bookmark;
   }
 
   async deleteBookmark(id: number): Promise<void> {
-    this.bookmarks.delete(id);
+    await db.delete(bookmarks).where(eq(bookmarks.id, id));
   }
 
   async searchBookmarks(userId: number, query: string): Promise<Bookmark[]> {
-    const userBookmarks = await this.getBookmarks(userId);
     const searchTerms = query.toLowerCase().split(" ");
-    
-    return userBookmarks.filter((bookmark) => {
+    const results = await db
+      .select()
+      .from(bookmarks)
+      .where(
+        and(
+          eq(bookmarks.userId, userId),
+          ilike(
+            bookmarks.title,
+            `%${searchTerms[0]}%`
+          )
+        )
+      );
+
+    return results.filter((bookmark) => {
       const searchText = `${bookmark.title} ${bookmark.description} ${bookmark.tags.join(" ")}`.toLowerCase();
       return searchTerms.every(term => searchText.includes(term));
     });
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
