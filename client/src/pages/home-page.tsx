@@ -64,6 +64,14 @@ export default function HomePage() {
       return res.json();
     },
     onSuccess: (data) => {
+      if (data.error) {
+        toast({
+          title: "Failed to suggest tags",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
       setNewBookmark(prev => ({
         ...prev,
         tags: data.tags,
@@ -71,6 +79,13 @@ export default function HomePage() {
       toast({
         title: "Tags suggested",
         description: "AI has suggested some tags for your bookmark",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to suggest tags",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });

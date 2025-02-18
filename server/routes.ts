@@ -18,7 +18,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new bookmark
   app.post("/api/bookmarks", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const parsed = insertBookmarkSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: "Invalid bookmark data" });
@@ -31,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a bookmark
   app.patch("/api/bookmarks/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const bookmark = await storage.getBookmark(parseInt(req.params.id));
     if (!bookmark || bookmark.userId !== req.user!.id) {
       return res.status(404).json({ error: "Bookmark not found" });
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete a bookmark
   app.delete("/api/bookmarks/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const bookmark = await storage.getBookmark(parseInt(req.params.id));
     if (!bookmark || bookmark.userId !== req.user!.id) {
       return res.status(404).json({ error: "Bookmark not found" });
@@ -62,7 +62,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search bookmarks
   app.get("/api/bookmarks/search", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const query = req.query.q as string;
     if (!query) {
       return res.status(400).json({ error: "Search query required" });
@@ -75,14 +75,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get AI tag suggestions
   app.post("/api/tags/suggest", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const { url, title, description } = req.body;
     if (!url || !title) {
       return res.status(400).json({ error: "URL and title are required" });
     }
 
-    const tags = await suggestTags(url, title, description || "");
-    res.json({ tags });
+    const result = await suggestTags(url, title, description || "");
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+    res.json({ tags: result.tags });
   });
 
   const httpServer = createServer(app);

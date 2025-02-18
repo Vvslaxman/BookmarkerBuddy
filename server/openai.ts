@@ -3,7 +3,7 @@ import OpenAI from "openai";
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function suggestTags(url: string, title: string, description: string): Promise<string[]> {
+export async function suggestTags(url: string, title: string, description: string): Promise<{ tags: string[], error?: string }> {
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -22,13 +22,21 @@ export async function suggestTags(url: string, title: string, description: strin
 
     const content = response.choices[0].message.content;
     if (!content) {
-      return [];
+      return { tags: [], error: "No suggestions generated" };
     }
 
     const result = JSON.parse(content);
-    return result.tags || [];
+    return { tags: result.tags || [] };
   } catch (error) {
     console.error("Failed to suggest tags:", error);
-    return [];
+    let errorMessage = "Failed to generate tag suggestions";
+
+    if (error.status === 429) {
+      errorMessage = "API rate limit exceeded. Please try again later.";
+    } else if (error.status === 401) {
+      errorMessage = "Invalid API key. Please check your OpenAI API key configuration.";
+    }
+
+    return { tags: [], error: errorMessage };
   }
 }
