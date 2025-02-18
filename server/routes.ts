@@ -7,7 +7,13 @@ import { insertBookmarkSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
-
+  
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "ok", 
+      timestamp: new Date().toISOString() 
+    });
+  });
   // Get all bookmarks for the authenticated user
   app.get("/api/bookmarks", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
