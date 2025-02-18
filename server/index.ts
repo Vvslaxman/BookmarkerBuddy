@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,14 +70,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     await setupVite(app, server);
   } else {
     // Serve static files in production
-    const publicPath = path.join(__dirname, '..','dist', 'public');
-    app.use(express.static(publicPath));
+    const distPath = path.join(process.cwd(), "dist", "public");
+    console.log("Serving static files from:", distPath);
+  
+    app.use(express.static(distPath));
 
-    // Add error handling middleware
-    app.use((err: any, req: any, res: any, next: any) => {
-      console.error('Error:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-    });
 
     // Handle SPA routing - Fixed by adding next parameter
     app.get('*', (req, res, next) => {
@@ -84,8 +82,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
         if (req.path.startsWith('/api')) {
           return next();
         }
-        const indexPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
+        const indexPath = path.join(process.cwd(), "dist", "public", "index.html");
         console.log('Serving index.html from:', indexPath);
+        if (!fs.existsSync(indexPath)) {
+          console.error("index.html not found at:", indexPath);
+          return res.status(404).send("Frontend assets not found");
+        }
         res.sendFile(indexPath, (err) => {
           if (err) {
             console.error('Error sending index.html:', err);
