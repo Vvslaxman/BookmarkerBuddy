@@ -152,12 +152,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10">
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+        <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
             Bookmarker
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-muted-foreground">Welcome, {user?.username}</span>
+            <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.username}</span>
             <Button
               variant="outline"
               onClick={() => logoutMutation.mutate()}
@@ -172,7 +172,7 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 mb-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Bookmarks</CardTitle>
@@ -182,7 +182,6 @@ export default function HomePage() {
               <div className="text-2xl font-bold">{stats?.totalBookmarks ?? 0}</div>
             </CardContent>
           </Card>
-
           <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Most Accessed</CardTitle>
@@ -203,7 +202,6 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Recently Added</CardTitle>
@@ -224,7 +222,6 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="backdrop-blur-sm bg-white/10 border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Recently Accessed</CardTitle>
@@ -249,21 +246,21 @@ export default function HomePage() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div className="w-full md:w-auto flex-1 space-y-4">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative max-w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                className="pl-10 backdrop-blur-sm bg-white/10 border border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors"
+                className="pl-10 w-full backdrop-blur-sm bg-white/10 border border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors"
                 placeholder="Search bookmarks..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 max-w-full overflow-hidden">
               {allTags.map(tag => (
                 <Badge
                   key={tag}
                   variant={selectedTags.includes(tag) ? "default" : "outline"}
-                  className="cursor-pointer hover:bg-primary/20"
+                  className="cursor-pointer hover:bg-primary/20 text-xs sm:text-sm whitespace-nowrap"
                   onClick={() => {
                     setSelectedTags(prev =>
                       prev.includes(tag)
@@ -280,7 +277,7 @@ export default function HomePage() {
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="backdrop-blur-sm bg-primary hover:bg-primary/90">
+              <Button className="w-full md:w-auto backdrop-blur-sm bg-primary hover:bg-primary/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Bookmark
               </Button>
@@ -373,31 +370,31 @@ export default function HomePage() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredBookmarks.map((bookmark) => (
-              <Card key={bookmark.id} className="backdrop-blur-sm bg-white/10 border-0 shadow-xl hover:shadow-2xl transition-all">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0">
-                  <div>
-                    <CardTitle className="line-clamp-1">
+              <Card key={bookmark.id} className="backdrop-blur-sm bg-white/10 border-0 shadow-xl hover:shadow-2xl transition-all overflow-hidden">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="line-clamp-1 text-base sm:text-lg">
                       <a
                         href={bookmark.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:underline text-primary"
+                        className="hover:underline text-primary truncate block"
                       >
                         {bookmark.title}
                       </a>
                     </CardTitle>
-                    <CardDescription className="line-clamp-1">
+                    <CardDescription className="line-clamp-1 text-xs sm:text-sm">
                       {bookmark.url}
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 ml-2 flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(bookmark)}
-                      className="hover:bg-white/20"
+                      className="h-8 w-8 hover:bg-white/20"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -406,21 +403,21 @@ export default function HomePage() {
                       size="icon"
                       onClick={() => deleteMutation.mutate(bookmark.id)}
                       disabled={deleteMutation.isPending}
-                      className="hover:bg-white/20"
+                      className="h-8 w-8 hover:bg-white/20"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 pt-0">
                   {bookmark.description && (
-                    <p className="text-muted-foreground mb-4 line-clamp-2">
+                    <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
                       {bookmark.description}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {bookmark.tags.map((tag, i) => (
-                      <Badge key={i} variant="secondary" className="bg-primary/10">
+                      <Badge key={i} variant="secondary" className="bg-primary/10 text-xs whitespace-nowrap">
                         {tag}
                       </Badge>
                     ))}
