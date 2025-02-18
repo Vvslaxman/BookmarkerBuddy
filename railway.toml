@@ -3,6 +3,6 @@ builder = "nixpacks"
 buildCommand = "npm run build:backend"
 
 [deploy]
-startCommand = "npm run dev"
+startCommand = "npm run start"
 healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"
