@@ -1,11 +1,20 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import helmet from "helmet";
+import path from "path";
 
 const app = express();
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled because we're using Vite in development
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -39,27 +48,43 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  const isDev = app.get("env") === "development";
+
+  if (isDev) {
+    await setupVite(app, server);
+  } else {
+    // Serve static files in production
+    app.use(express.static(path.join(process.cwd(), "dist")));
+
+    // Handle SPA routing - serve index.html for all non-API routes
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) {
+        return next();
+      }
+      res.sendFile(path.join(process.cwd(), "dist", "index.html"));
+    });
+  }
+
+  // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error(err);
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    res.status(status).json({ 
+      error: true,
+      message,
+      ...(isDev ? { stack: err.stack } : {})
+    });
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  // Handle 404 errors for API routes
+  app.use("/api/*", (_req: Request, res: Response) => {
+    res.status(404).json({ error: true, message: "API endpoint not found" });
+  });
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const PORT = 5000;
+  const PORT = parseInt(process.env.PORT || "5000", 10);
   server.listen(PORT, "0.0.0.0", () => {
-    log(`serving on port ${PORT}`);
+    log(`Server running in ${app.get("env")} mode on port ${PORT}`);
   });
 })();
