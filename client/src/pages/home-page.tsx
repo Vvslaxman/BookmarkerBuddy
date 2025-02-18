@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, Trash2, Tag } from "lucide-react";
+import { Loader2, Plus, Search, Trash2, Tag, Edit2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,8 @@ export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
+  const [newTag, setNewTag] = useState("");
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [newBookmark, setNewBookmark] = useState({
     url: "",
     title: "",
@@ -45,6 +47,22 @@ export default function HomePage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (bookmark: Partial<Bookmark>) => {
+      const res = await apiRequest("PATCH", `/api/bookmarks/${bookmark.id}`, bookmark);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookmarks"] });
+      setIsDialogOpen(false);
+      setEditingBookmark(null);
+      toast({
+        title: "Success",
+        description: "Bookmark updated successfully",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/bookmarks/${id}`);
@@ -58,37 +76,39 @@ export default function HomePage() {
     },
   });
 
-  const suggestTagsMutation = useMutation({
-    mutationFn: async (data: { url: string; title: string; description: string }) => {
-      const res = await apiRequest("POST", "/api/tags/suggest", data);
-      return res.json();
-    },
-    onSuccess: (data) => {
-      if (data.error) {
-        toast({
-          title: "Failed to suggest tags",
-          description: data.error,
-          variant: "destructive",
-        });
-        return;
-      }
-      setNewBookmark(prev => ({
-        ...prev,
-        tags: data.tags,
-      }));
-      toast({
-        title: "Tags suggested",
-        description: "AI has suggested some tags for your bookmark",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to suggest tags",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const handleTagAdd = (formState: typeof newBookmark | Bookmark) => {
+    if (!newTag.trim()) return;
+    const updatedTags = [...formState.tags, newTag.trim()];
+    if (editingBookmark) {
+      setEditingBookmark({ ...editingBookmark, tags: updatedTags });
+    } else {
+      setNewBookmark({ ...newBookmark, tags: updatedTags });
+    }
+    setNewTag("");
+  };
+
+  const handleTagRemove = (index: number, formState: typeof newBookmark | Bookmark) => {
+    const updatedTags = formState.tags.filter((_, i) => i !== index);
+    if (editingBookmark) {
+      setEditingBookmark({ ...editingBookmark, tags: updatedTags });
+    } else {
+      setNewBookmark({ ...newBookmark, tags: updatedTags });
+    }
+  };
+
+  const handleEdit = (bookmark: Bookmark) => {
+    setEditingBookmark(bookmark);
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingBookmark) {
+      updateMutation.mutate(editingBookmark);
+    } else {
+      createMutation.mutate(newBookmark);
+    }
+  };
 
   const filteredBookmarks = bookmarks?.filter(bookmark => {
     if (!search) return true;
@@ -130,7 +150,13 @@ export default function HomePage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            if (!open) {
+              setEditingBookmark(null);
+              setNewBookmark({ url: "", title: "", description: "", tags: [] });
+            }
+            setIsDialogOpen(open);
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -139,19 +165,18 @@ export default function HomePage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Bookmark</DialogTitle>
+                <DialogTitle>{editingBookmark ? 'Edit Bookmark' : 'Add New Bookmark'}</DialogTitle>
               </DialogHeader>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                createMutation.mutate(newBookmark);
-              }}>
+              <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="url">URL</Label>
                     <Input
                       id="url"
-                      value={newBookmark.url}
-                      onChange={(e) => setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
+                      value={editingBookmark?.url || newBookmark.url}
+                      onChange={(e) => editingBookmark 
+                        ? setEditingBookmark({ ...editingBookmark, url: e.target.value })
+                        : setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
                       required
                     />
                   </div>
@@ -159,8 +184,10 @@ export default function HomePage() {
                     <Label htmlFor="title">Title</Label>
                     <Input
                       id="title"
-                      value={newBookmark.title}
-                      onChange={(e) => setNewBookmark(prev => ({ ...prev, title: e.target.value }))}
+                      value={editingBookmark?.title || newBookmark.title}
+                      onChange={(e) => editingBookmark
+                        ? setEditingBookmark({ ...editingBookmark, title: e.target.value })
+                        : setNewBookmark(prev => ({ ...prev, title: e.target.value }))}
                       required
                     />
                   </div>
@@ -168,45 +195,50 @@ export default function HomePage() {
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
-                      value={newBookmark.description}
-                      onChange={(e) => setNewBookmark(prev => ({ ...prev, description: e.target.value }))}
+                      value={editingBookmark?.description || newBookmark.description}
+                      onChange={(e) => editingBookmark
+                        ? setEditingBookmark({ ...editingBookmark, description: e.target.value })
+                        : setNewBookmark(prev => ({ ...prev, description: e.target.value }))}
                     />
                   </div>
                   <div>
                     <Label>Tags</Label>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {newBookmark.tags.map((tag, i) => (
+                      {(editingBookmark?.tags || newBookmark.tags).map((tag, i) => (
                         <Badge
                           key={i}
                           variant="secondary"
                           className="cursor-pointer"
-                          onClick={() => setNewBookmark(prev => ({
-                            ...prev,
-                            tags: prev.tags.filter((_, index) => index !== i)
-                          }))}
+                          onClick={() => handleTagRemove(i, editingBookmark || newBookmark)}
                         >
                           {tag}
                         </Badge>
                       ))}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => suggestTagsMutation.mutate({
-                        url: newBookmark.url,
-                        title: newBookmark.title,
-                        description: newBookmark.description,
-                      })}
-                      disabled={suggestTagsMutation.isPending}
-                    >
-                      <Tag className="mr-2 h-4 w-4" />
-                      Suggest Tags
-                    </Button>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Add a tag"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleTagAdd(editingBookmark || newBookmark);
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleTagAdd(editingBookmark || newBookmark)}
+                      >
+                        <Tag className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Bookmark
+                  <Button type="submit" className="w-full" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {editingBookmark ? 'Update' : 'Save'} Bookmark
                   </Button>
                 </div>
               </form>
@@ -238,14 +270,23 @@ export default function HomePage() {
                       {bookmark.url}
                     </CardDescription>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteMutation.mutate(bookmark.id)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(bookmark)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteMutation.mutate(bookmark.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {bookmark.description && (
