@@ -15,7 +15,7 @@ Check out the live demo: [BookmarkerBuddy](https://cometforge-production.up.rail
 - 🏷️ Advanced tagging system
 - 🔍 Powerful search functionality
 - 📊 Bookmark analytics and insights
-- 🎨 Modern glassmorphic design
+- 🎨 Modern glassmorphic design and theme switching
 - 📱 Responsive layout for all devices
 
 ## Tech Stack
@@ -89,6 +89,7 @@ The application will be available at `http://localhost:5000`
 ├── client/
 │   ├── src/
 │   │   ├── components/
+│   │   ├── contexts/
 │   │   ├── hooks/
 │   │   ├── lib/
 │   │   └── pages/
