@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Moon, Sun } from "lucide-react";
 import type { Bookmark } from "@shared/schema";
 
 type BookmarkStats = {
@@ -159,6 +160,18 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.username}</span>
             <Button
+  variant="ghost"
+  size="icon"
+  onClick={() => document.documentElement.classList.toggle('dark')}
+  className="h-8 w-8 border-2 border-gray-300 dark:border-gray-600 rounded-full hover:border-primary focus:ring-2 focus:ring-primary transition-all"
+>
+  <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+  <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 dark:text-white text-black" />
+  <span className="sr-only">Toggle theme</span>
+</Button>
+
+
+            <Button
               variant="outline"
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
@@ -249,7 +262,7 @@ export default function HomePage() {
             <div className="relative max-w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                className="pl-10 w-full backdrop-blur-sm bg-white/10 border border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors"
+                className="pl-10 w-full bg-background/80 border-2 border-primary/30 focus:border-primary hover:border-primary/50 transition-colors shadow-sm"
                 placeholder="Search bookmarks..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -260,7 +273,7 @@ export default function HomePage() {
                 <Badge
                   key={tag}
                   variant={selectedTags.includes(tag) ? "default" : "outline"}
-                  className="cursor-pointer hover:bg-primary/20 text-xs sm:text-sm whitespace-nowrap"
+                  className="border-2 cursor-pointer hover:bg-primary/20 text-xs sm:text-sm whitespace-nowrap"
                   onClick={() => {
                     setSelectedTags(prev =>
                       prev.includes(tag)
@@ -269,27 +282,37 @@ export default function HomePage() {
                     );
                   }}
                 >
+          
                   {tag}
                 </Badge>
               ))}
             </div>
           </div>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              if (!open) {
+                setEditingBookmark(null);
+                setNewBookmark({ url: "", title: "", description: "", tags: [] });
+              }
+              setIsDialogOpen(open);
+            }}>
+            
             <DialogTrigger asChild>
-              <Button className="w-full md:w-auto backdrop-blur-sm bg-primary hover:bg-primary/90">
+              <Button className="w-full md:w-auto backdrop-blur-sm bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Bookmark
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            
+            <DialogContent className="sm:max-w-[500px] bg-background/95 text-foreground backdrop-blur-xl border-primary/20 shadow-2xl">
               <DialogHeader>
-                <DialogTitle>{editingBookmark ? 'Edit Bookmark' : 'Add New Bookmark'}</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-foreground text-primary">{editingBookmark ? 'Edit Bookmark' : 'Add New Bookmark'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <Label htmlFor="url">URL</Label>
+                    <Label htmlFor="url" className="text-sm font-medium text-primary">URL</Label>
                     <Input
                       id="url"
                       value={editingBookmark?.url || newBookmark.url}
@@ -297,6 +320,7 @@ export default function HomePage() {
                         ? setEditingBookmark({ ...editingBookmark, url: e.target.value })
                         : setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
                       required
+                      className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
                     />
                   </div>
                   <div>
@@ -308,6 +332,7 @@ export default function HomePage() {
                         ? setEditingBookmark({ ...editingBookmark, title: e.target.value })
                         : setNewBookmark(prev => ({ ...prev, title: e.target.value }))}
                       required
+                      className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
                     />
                   </div>
                   <div>
@@ -318,6 +343,7 @@ export default function HomePage() {
                       onChange={(e) => editingBookmark
                         ? setEditingBookmark({ ...editingBookmark, description: e.target.value })
                         : setNewBookmark(prev => ({ ...prev, description: e.target.value }))}
+                        className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
                     />
                   </div>
                   <div>
@@ -327,7 +353,7 @@ export default function HomePage() {
                         <Badge
                           key={i}
                           variant="secondary"
-                          className="cursor-pointer"
+                          className="cursor-pointer border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
                           onClick={() => handleTagRemove(i, editingBookmark || newBookmark)}
                         >
                           {tag}
@@ -345,17 +371,23 @@ export default function HomePage() {
                             handleTagAdd(editingBookmark || newBookmark);
                           }
                         }}
+                        className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
                       />
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => handleTagAdd(editingBookmark || newBookmark)}
+                        className="border-2"
                       >
                         <Tag className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full" disabled={createMutation.isPending || updateMutation.isPending}>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary/90 hover:bg-primary shadow-lg hover:shadow-xl transition-all duration-200 mt-6" 
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                  >
                     {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingBookmark ? 'Update' : 'Save'} Bookmark
                   </Button>

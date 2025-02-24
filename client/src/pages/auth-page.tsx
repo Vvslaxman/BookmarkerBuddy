@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ export default function AuthPage() {
                         value={formData.username}
                         onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                         required
+                        className="border-2 border-input bg-background/10 focus:border-primary hover:border-primary/50 transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <div>
@@ -59,6 +61,7 @@ export default function AuthPage() {
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                         required
+                        className="border-2 border-input bg-background/10 focus:border-primary hover:border-primary/50 transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <Button 
@@ -86,6 +89,7 @@ export default function AuthPage() {
                         value={formData.username}
                         onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                         required
+                        className="border-input/20 focus:border-primary/50 hover:border-input/30 transition-colors backdrop-blur-sm bg-background/10"
                       />
                     </div>
                     <div>
@@ -96,6 +100,7 @@ export default function AuthPage() {
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                         required
+                        className="border-input/20 focus:border-primary/50 hover:border-input/30 transition-colors backdrop-blur-sm bg-background/10"
                       />
                     </div>
                     <Button 
@@ -116,18 +121,18 @@ export default function AuthPage() {
 
       <div className="hidden lg:flex flex-col justify-center bg-muted p-8">
         <div className="max-w-md mx-auto">
-          <h2 className="text-3xl font-bold mb-4">Save and Organize Your Bookmarks</h2>
+          <h2 className="text-3xl font-bold mb-4 text-foreground">Save and Organize Your Bookmarks</h2>
           <p className="text-muted-foreground mb-6">
             Bookmarker helps you save and organize your favorite websites with AI-powered tag suggestions.
             Access your bookmarks from anywhere and never lose track of important resources.
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-background rounded-lg">
-              <h3 className="font-semibold mb-2">Smart Tags</h3>
+              <h3 className="font-semibold mb-2 text-foreground">Smart Tags</h3>
               <p className="text-sm text-muted-foreground">AI-powered tag suggestions for better organization</p>
             </div>
             <div className="p-4 bg-background rounded-lg">
-              <h3 className="font-semibold mb-2">Easy Search</h3>
+              <h3 className="font-semibold mb-2 text-foreground">Easy Search</h3>
               <p className="text-sm text-muted-foreground">Find your bookmarks quickly with powerful search</p>
             </div>
           </div>

@@ -7,6 +7,8 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "./lib/protected-route";
+import { ThemeProvider } from "./contexts/theme-context"; 
+import { ThemeToggle } from "./components/theme-toggle";
 
 function Router() {
   return (
@@ -22,8 +24,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <ThemeProvider>
+          <div className="relative min-h-screen">
+            <div className="fixed top-4 right-4 z-50">
+              <ThemeToggle />
+            </div>
+            <Router />
+            <Toaster />
+          </div>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

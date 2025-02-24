@@ -3,16 +3,27 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { suggestTags } from "./openai";
-import { insertBookmarkSchema } from "@shared/schema";
+import { insertBookmarkSchema, users } from "@shared/schema";
+import { db } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   
-  app.get("/api/health", (req, res) => {
-    res.json({ 
-      status: "ok", 
-      timestamp: new Date().toISOString() 
-    });
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Test database connection
+      await db.select().from(users).limit(1);
+      res.json({ 
+        status: "ok", 
+        timestamp: new Date().toISOString(),
+        database: "connected"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        status: "error", 
+        message: "Database connection failed"
+      });
+    }
   });
   // Get all bookmarks for the authenticated user
   app.get("/api/bookmarks", async (req, res) => {

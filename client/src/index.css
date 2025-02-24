@@ -3,11 +3,38 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --glass-opacity: 0.7;
+    --glass-blur: 12px;
+    --glass-border: 1px;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased min-h-screen;
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--primary)/0.1) 100%);
+  }
+
+  .glass {
+    @apply backdrop-blur-xl bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10;
+  }
+
+  .glass-card {
+    @apply glass rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02];
+  }
+
+  .glass-button {
+    @apply glass hover:bg-white/20 dark:hover:bg-white/5 transition-colors;
+  }
+
+  .glass-input {
+    @apply glass border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors;
+  }
+
+  .nav-blur {
+    @apply backdrop-blur-md bg-background/60 border-b border-white/10 supports-[backdrop-filter]:bg-background/60;
   }
 }
