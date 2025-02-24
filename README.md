@@ -50,6 +50,7 @@ Create a `.env` file in the root directory with the following variables:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/bookmarker
 PORT=5000
+etc
 ```
 
 4. Initialize the database:
