@@ -4,7 +4,7 @@ A comprehensive bookmark management application built with Next.js and secure au
 
 ## Live Demo
 
-Check out the live demo: [BookmarkerBuddy](https://cometforge-production.up.railway.app/)
+Check out the live demo: [BookmarkerBuddy](https://bookmarkerbuddy-production.up.railway.app/)
 
 ![Auth Page](auth-page.png)
 ![Home Page](home-page.png)
