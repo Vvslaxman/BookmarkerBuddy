@@ -31,12 +31,20 @@ export async function suggestTags(url: string, title: string, description: strin
     console.error("Failed to suggest tags:", error);
     let errorMessage = "Failed to generate tag suggestions";
 
-    if (error.status === 429) {
+    if ((error as any).status === 429) {
       errorMessage = "API rate limit exceeded. Please try again later.";
-    } else if (error.status === 401) {
+    } else if ((error as any).status === 401) {
       errorMessage = "Invalid API key. Please check your OpenAI API key configuration.";
     }
 
     return { tags: [], error: errorMessage };
+    // Fallback to basic tag extraction
+    // const combined = `${title} ${description}`.toLowerCase();
+    // const words = combined.split(/[\s,.-]+/);
+    // const commonWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with']);
+    // const tags = [...new Set(words)]
+    //   .filter(word => word.length > 2 && !commonWords.has(word))
+    //   .slice(0, 5);
+    // return { tags };
   }
 }

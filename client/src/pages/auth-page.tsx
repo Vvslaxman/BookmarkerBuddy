@@ -89,7 +89,7 @@ export default function AuthPage() {
                         value={formData.username}
                         onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                         required
-                        className="border-input/20 focus:border-primary/50 hover:border-input/30 transition-colors backdrop-blur-sm bg-background/10"
+                        className="border-2 border-input bg-background/10 focus:border-primary hover:border-primary/50 transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <div>
@@ -100,7 +100,7 @@ export default function AuthPage() {
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                         required
-                        className="border-input/20 focus:border-primary/50 hover:border-input/30 transition-colors backdrop-blur-sm bg-background/10"
+                        className="border-2 border-input bg-background/10 focus:border-primary hover:border-primary/50 transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <Button 

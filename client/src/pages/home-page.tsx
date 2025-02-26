@@ -115,6 +115,54 @@ export default function HomePage() {
     setIsDialogOpen(true);
   };
 
+  
+  const suggestTagsMutation = useMutation({
+    mutationFn: async ({ url, title }: { url: string, title: string }) => {
+      const res = await apiRequest("POST", "/api/tags/suggest", { url, title });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      const newTags = data.tags.filter((tag: string) => 
+        !(editingBookmark?.tags || newBookmark.tags).includes(tag)
+      );
+      if (editingBookmark) {
+        setEditingBookmark({ ...editingBookmark, tags: [...editingBookmark.tags, ...newTags] });
+      } else {
+        setNewBookmark({ ...newBookmark, tags: [...newBookmark.tags, ...newTags] });
+      }
+    },
+  });
+
+  const handleURLChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    if (editingBookmark) {
+      setEditingBookmark({ ...editingBookmark, url });
+    } else {
+      setNewBookmark({ ...newBookmark, url });
+    }
+    if (url && (editingBookmark?.title || newBookmark.title)) {
+      suggestTagsMutation.mutate({ 
+        url, 
+        title: editingBookmark?.title || newBookmark.title 
+      });
+    }
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const title = e.target.value;
+    if (editingBookmark) {
+      setEditingBookmark({ ...editingBookmark, title });
+    } else {
+      setNewBookmark({ ...newBookmark, title });
+    }
+    if (title && (editingBookmark?.url || newBookmark.url)) {
+      suggestTagsMutation.mutate({ 
+        url: editingBookmark?.url || newBookmark.url, 
+        title 
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingBookmark) {
@@ -169,17 +217,15 @@ export default function HomePage() {
   <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 dark:text-white text-black" />
   <span className="sr-only">Toggle theme</span>
 </Button>
-
-
-            <Button
-              variant="outline"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-              className="backdrop-blur-sm bg-white/10 hover:bg-white/20 border-0"
-            >
-              {logoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Logout
-            </Button>
+        <Button
+          variant="outline"
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+          className="backdrop-blur-sm bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 border-0 text-black dark:text-white"
+        >
+          {logoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Logout
+        </Button>
           </div>
         </div>
       </header>
@@ -316,9 +362,10 @@ export default function HomePage() {
                     <Input
                       id="url"
                       value={editingBookmark?.url || newBookmark.url}
-                      onChange={(e) => editingBookmark
-                        ? setEditingBookmark({ ...editingBookmark, url: e.target.value })
-                        : setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
+                      onChange={handleURLChange}
+                      // onChange={(e) => editingBookmark
+                      //   ? setEditingBookmark({ ...editingBookmark, url: e.target.value })
+                      //   : setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
                       required
                       className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
                     />
@@ -328,9 +375,10 @@ export default function HomePage() {
                     <Input
                       id="title"
                       value={editingBookmark?.title || newBookmark.title}
-                      onChange={(e) => editingBookmark
-                        ? setEditingBookmark({ ...editingBookmark, title: e.target.value })
-                        : setNewBookmark(prev => ({ ...prev, title: e.target.value }))}
+                      onChange={handleTitleChange}
+                      // onChange={(e) => editingBookmark
+                      //   ? setEditingBookmark({ ...editingBookmark, title: e.target.value })
+                      //   : setNewBookmark(prev => ({ ...prev, title: e.target.value }))}
                       required
                       className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
                     />
