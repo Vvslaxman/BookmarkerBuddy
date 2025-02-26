@@ -305,15 +305,15 @@ export default function HomePage() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div className="w-full md:w-auto flex-1 space-y-4">
-            <div className="relative max-w-full sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                className="pl-10 w-full bg-background/80 border-2 border-primary/30 focus:border-primary hover:border-primary/50 transition-colors shadow-sm"
-                placeholder="Search bookmarks..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+          <div className="relative max-w-full sm:max-w-sm">
+    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+    <Input
+      className="pl-10 w-full bg-background/80 border-2 border-primary/30 focus:border-primary hover:border-primary/50 transition-colors shadow-sm text-black dark:text-white"
+      placeholder="Search bookmarks..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+  </div>
             <div className="flex flex-wrap gap-2 max-w-full overflow-hidden">
               {allTags.map(tag => (
                 <Badge
