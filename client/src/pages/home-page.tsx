@@ -308,7 +308,7 @@ export default function HomePage() {
           <div className="relative max-w-full sm:max-w-sm">
     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
     <Input
-      className="pl-10 w-full bg-background/80 border-2 border-primary/30 focus:border-primary hover:border-primary/50 transition-colors shadow-sm text-black dark:text-white"
+      className="pl-10 w-full transition-colors shadow-sm text-black dark:text-white"
       placeholder="Search bookmarks..."
       value={search}
       onChange={(e) => setSearch(e.target.value)}
@@ -319,7 +319,10 @@ export default function HomePage() {
                 <Badge
                   key={tag}
                   variant={selectedTags.includes(tag) ? "default" : "outline"}
-                  className="border-2 cursor-pointer hover:bg-primary/20 text-xs sm:text-sm whitespace-nowrap"
+                  className="cursor-pointer hover:bg-primary/20 text-xs sm:text-sm whitespace-nowrap 
+        border-opacity-40 hover:border-opacity-80
+        border-gray-300 dark:border-gray-300
+        border-[2px] dark:border-[1px]"
                   onClick={() => {
                     setSelectedTags(prev =>
                       prev.includes(tag)
@@ -367,7 +370,7 @@ export default function HomePage() {
                       //   ? setEditingBookmark({ ...editingBookmark, url: e.target.value })
                       //   : setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
                       required
-                      className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
+                      className="shadow-sm backdrop-blur-sm bg-white/10"
                     />
                   </div>
                   <div>
@@ -380,7 +383,7 @@ export default function HomePage() {
                       //   ? setEditingBookmark({ ...editingBookmark, title: e.target.value })
                       //   : setNewBookmark(prev => ({ ...prev, title: e.target.value }))}
                       required
-                      className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
+                      className="shadow-sm backdrop-blur-sm bg-white/10"
                     />
                   </div>
                   <div>
@@ -391,7 +394,7 @@ export default function HomePage() {
                       onChange={(e) => editingBookmark
                         ? setEditingBookmark({ ...editingBookmark, description: e.target.value })
                         : setNewBookmark(prev => ({ ...prev, description: e.target.value }))}
-                        className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
+                        className="shadow-sm backdrop-blur-sm bg-white/10"
                     />
                   </div>
                   <div>
@@ -419,7 +422,7 @@ export default function HomePage() {
                             handleTagAdd(editingBookmark || newBookmark);
                           }
                         }}
-                        className=" border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
+                        className="shadow-sm backdrop-blur-sm bg-white/10"
                       />
                       <Button
                         type="button"
