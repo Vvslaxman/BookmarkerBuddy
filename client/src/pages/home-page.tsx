@@ -361,7 +361,7 @@ export default function HomePage() {
               <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
                   <div>
-                    <Label htmlFor="url" className="text-sm font-medium text-primary">URL</Label>
+                    <Label htmlFor="url" className="text-sm font-medium text">URL</Label>
                     <Input
                       id="url"
                       value={editingBookmark?.url || newBookmark.url}
