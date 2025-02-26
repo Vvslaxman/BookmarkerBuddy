@@ -21,6 +21,8 @@ export default defineConfig({
         ]
       : []),
   ],
+  base: '/', 
+  publicDir: path.resolve(__dirname, "client/public"),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client", "src"),
@@ -31,6 +33,12 @@ export default defineConfig({
   build: {
     outDir: path.resolve(process.cwd(), "dist/public"),
     emptyOutDir: true,
+    assetsDir: 'assets', // Where to store built assets
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name][extname]' // Keep original filenames
+      }
+    }
   },
   server: {
     proxy: {
