@@ -359,81 +359,76 @@ export default function HomePage() {
                 <DialogTitle className="text-2xl font-bold text-foreground text-primary">{editingBookmark ? 'Edit Bookmark' : 'Add New Bookmark'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
-                <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="url" className="text-sm font-medium text">URL</Label>
-                    <Input
-                      id="url"
-                      value={editingBookmark?.url || newBookmark.url}
-                      onChange={handleURLChange}
-                      // onChange={(e) => editingBookmark
-                      //   ? setEditingBookmark({ ...editingBookmark, url: e.target.value })
-                      //   : setNewBookmark(prev => ({ ...prev, url: e.target.value }))}
-                      required
-                      className="shadow-sm backdrop-blur-sm bg-white/10"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={editingBookmark?.title || newBookmark.title}
-                      onChange={handleTitleChange}
-                      // onChange={(e) => editingBookmark
-                      //   ? setEditingBookmark({ ...editingBookmark, title: e.target.value })
-                      //   : setNewBookmark(prev => ({ ...prev, title: e.target.value }))}
-                      required
-                      className="shadow-sm backdrop-blur-sm bg-white/10"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={editingBookmark?.description || newBookmark.description}
-                      onChange={(e) => editingBookmark
-                        ? setEditingBookmark({ ...editingBookmark, description: e.target.value })
-                        : setNewBookmark(prev => ({ ...prev, description: e.target.value }))}
-                        className="shadow-sm backdrop-blur-sm bg-white/10"
-                    />
-                  </div>
-                  <div>
-                    <Label>Tags</Label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {(editingBookmark?.tags || newBookmark.tags).map((tag, i) => (
-                        <Badge
-                          key={i}
-                          variant="secondary"
-                          className="cursor-pointer border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
-                          onClick={() => handleTagRemove(i, editingBookmark || newBookmark)}
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        placeholder="Add a tag"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleTagAdd(editingBookmark || newBookmark);
-                          }
-                        }}
-                        className="shadow-sm backdrop-blur-sm bg-white/10"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleTagAdd(editingBookmark || newBookmark)}
-                        className="border-2"
-                      >
-                        <Tag className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+  <div className="space-y-6">
+    <div>
+      <Label htmlFor="url" className="text-sm font-medium block mb-2">URL</Label> {/* block to make label block-level and add margin-bottom */}
+      <Input
+        id="url"
+        value={editingBookmark?.url || newBookmark.url}
+        onChange={handleURLChange}
+        required
+        className="shadow-sm backdrop-blur-sm bg-white/10"
+      />
+    </div>
+    <div>
+      <Label htmlFor="title" className="block mb-2">Title</Label> {/* block and margin-bottom */}
+      <Input
+        id="title"
+        value={editingBookmark?.title || newBookmark.title}
+        onChange={handleTitleChange}
+        required
+        className="shadow-sm backdrop-blur-sm bg-white/10"
+      />
+    </div>
+    <div>
+      <Label htmlFor="description" className="block mb-2">Description</Label> {/* block and margin-bottom */}
+      <Textarea
+        id="description"
+        value={editingBookmark?.description || newBookmark.description}
+        onChange={(e) => editingBookmark
+          ? setEditingBookmark({ ...editingBookmark, description: e.target.value })
+          : setNewBookmark(prev => ({ ...prev, description: e.target.value }))}
+        className="shadow-sm backdrop-blur-sm bg-white/10"
+      />
+    </div>
+    <div>
+      <Label className="block mb-2">Tags</Label> {/* block and margin-bottom for tags */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {(editingBookmark?.tags || newBookmark.tags).map((tag, i) => (
+          <Badge
+            key={i}
+            variant="secondary"
+            className="cursor-pointer border-2 border-white/20 focus:border-primary/50 hover:border-white/30 transition-colors backdrop-blur-sm bg-white/10"
+            onClick={() => handleTagRemove(i, editingBookmark || newBookmark)}
+          >
+            {tag}
+          </Badge>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          value={newTag}
+          onChange={(e) => setNewTag(e.target.value)}
+          placeholder="Add a tag"
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleTagAdd(editingBookmark || newBookmark);
+            }
+          }}
+          className="shadow-sm backdrop-blur-sm bg-white/10"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => handleTagAdd(editingBookmark || newBookmark)}
+          className="border-2"
+        >
+          <Tag className="h-4 w-4" />
+        </Button>
+      </div>
+      </div>
+
                   <Button 
                     type="submit" 
                     className="w-full bg-primary/90 hover:bg-primary shadow-lg hover:shadow-xl transition-all duration-200 mt-6" 
