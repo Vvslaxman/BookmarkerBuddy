@@ -25,7 +25,7 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Welcome to Bookmarker</CardTitle>
+            <CardTitle>Welcome to BookmarkerBuddy</CardTitle>
             <CardDescription>
               Sign in to manage your bookmarks or create a new account
             </CardDescription>
@@ -128,12 +128,13 @@ export default function AuthPage() {
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-background rounded-lg">
-              <h3 className="font-semibold mb-2 text-foreground">Smart Tags</h3>
-              <p className="text-sm text-muted-foreground">AI-powered tag suggestions for better organization</p>
+            <h3 className="font-semibold mb-2 text-foreground">Easy Search</h3>
+            <p className="text-sm text-muted-foreground">Find your bookmarks quickly with powerful search</p>
+              
             </div>
             <div className="p-4 bg-background rounded-lg">
-              <h3 className="font-semibold mb-2 text-foreground">Easy Search</h3>
-              <p className="text-sm text-muted-foreground">Find your bookmarks quickly with powerful search</p>
+              <h3 className="font-semibold mb-2 text-foreground">Smart Tags</h3>
+              <p className="text-sm text-muted-foreground">AI-powered tag suggestions for better organization</p>
             </div>
           </div>
         </div>
