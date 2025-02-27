@@ -99,6 +99,9 @@ The application will be available at `http://localhost:5000`
 │   ├── routes.ts
 │   ├── storage.ts
 │   └── auth.ts
+│   └── db.ts
+│   └── index.ts
+│   └── vite.ts
 └── shared/
     └── schema.ts
 ```
@@ -121,13 +124,12 @@ The application will be available at `http://localhost:5000`
 }
 ```
 
-## Deployment
+## Deployment:
+Hosted on Railway
 
-The application is configured to be deployed on Replit:
+- Add the required environment variables
+- The application will automatically build and deploy
 
-1. Fork the project on Replit
-2. Add the required environment variables in Replit's Secrets tab
-3. The application will automatically build and deploy
 
 Alternatively, for other platforms:
 
