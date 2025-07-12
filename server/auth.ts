@@ -64,6 +64,11 @@ export function setupAuth(app: Express) {
       return res.status(400).send("Username already exists");
     }
 
+    const existingEmail = await storage.getUserByEmail(req.body.email);
+    if (existingEmail) {
+      return res.status(400).send("Email already exists");
+    }
+
     const user = await storage.createUser({
       ...req.body,
       password: await hashPassword(req.body.password),
@@ -74,7 +79,7 @@ export function setupAuth(app: Express) {
       res.status(201).json(user);
     });
   });
-
+  
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     res.status(200).json(req.user);
   });

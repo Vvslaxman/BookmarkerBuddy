@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,12 @@ import { Loader2 } from "lucide-react";
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ 
+    username: "", 
+    email: "", 
+    fullName: "", 
+    password: "" 
+  });
 
   if (user) {
     setLocation("/");
@@ -25,7 +29,7 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Welcome to BookmarkerBuddy</CardTitle>
+            <CardTitle>Welcome to Bookmarker</CardTitle>
             <CardDescription>
               Sign in to manage your bookmarks or create a new account
             </CardDescription>
@@ -50,7 +54,6 @@ export default function AuthPage() {
                         value={formData.username}
                         onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                         required
-                        className="transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <div>
@@ -61,7 +64,6 @@ export default function AuthPage() {
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                         required
-                        className=" transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <Button 
@@ -83,13 +85,33 @@ export default function AuthPage() {
                 }}>
                   <div className="space-y-4">
                     <div>
+                      <Label htmlFor="reg-fullname">Full Name</Label>
+                      <Input
+                        id="reg-fullname"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                        placeholder="Your full name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="reg-email">Email</Label>
+                      <Input
+                        id="reg-email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="your@email.com"
+                        required
+                      />
+                    </div>
+                    <div>
                       <Label htmlFor="reg-username">Username</Label>
                       <Input
                         id="reg-username"
                         value={formData.username}
                         onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                        placeholder="Choose a username"
                         required
-                        className=" transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <div>
@@ -99,8 +121,8 @@ export default function AuthPage() {
                         type="password"
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                        placeholder="Create a strong password"
                         required
-                        className=" transition-colors backdrop-blur-sm"
                       />
                     </div>
                     <Button 
@@ -128,13 +150,12 @@ export default function AuthPage() {
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-background rounded-lg">
-            <h3 className="font-semibold mb-2 text-foreground">Easy Search</h3>
-            <p className="text-sm text-muted-foreground">Find your bookmarks quickly with powerful search</p>
-              
-            </div>
-            <div className="p-4 bg-background rounded-lg">
               <h3 className="font-semibold mb-2 text-foreground">Smart Tags</h3>
               <p className="text-sm text-muted-foreground">AI-powered tag suggestions for better organization</p>
+            </div>
+            <div className="p-4 bg-background rounded-lg">
+              <h3 className="font-semibold mb-2 text-foreground">Easy Search</h3>
+              <p className="text-sm text-muted-foreground">Find your bookmarks quickly with powerful search</p>
             </div>
           </div>
         </div>

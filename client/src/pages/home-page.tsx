@@ -206,7 +206,7 @@ export default function HomePage() {
             BookmarkerBuddy
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.username}</span>
+          <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.fullName || user?.username}</span>
             <Button
   variant="ghost"
   size="icon"
