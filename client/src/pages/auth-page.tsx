@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useDemo } from "@/hooks/use-demo";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -11,6 +12,7 @@ import { Loader2 } from "lucide-react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const { isDemoMode, enterDemoMode } = useDemo();
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({ 
     username: "", 
@@ -19,10 +21,15 @@ export default function AuthPage() {
     password: "" 
   });
 
-  if (user) {
+  if (user || isDemoMode) {
     setLocation("/");
     return null;
   }
+
+  const handleDemoMode = () => {
+    enterDemoMode();
+    setLocation("/");
+  };
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
@@ -137,6 +144,9 @@ export default function AuthPage() {
                 </form>
               </TabsContent>
             </Tabs>
+            <Button variant="secondary" className="w-full mt-4" onClick={handleDemoMode}>
+              Enter Demo Mode
+            </Button>
           </CardContent>
         </Card>
       </div>

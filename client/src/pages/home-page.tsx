@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Moon, Sun } from "lucide-react";
 import type { Bookmark } from "@shared/schema";
+import { useDemo } from "@/hooks/use-demo";
+
 
 type BookmarkStats = {
   totalBookmarks: number;
@@ -198,6 +200,8 @@ export default function HomePage() {
     });
   }, [bookmarks, search, selectedTags]);
 
+  const { isDemoMode, demoUser, exitDemoMode } = useDemo();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10">
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -206,7 +210,17 @@ export default function HomePage() {
             BookmarkerBuddy
           </h1>
           <div className="flex items-center gap-4">
-          <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.fullName || user?.username}</span>
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-4">
+              <span className="text-muted-foreground text-sm sm:text-base">
+                Welcome, {isDemoMode ? demoUser?.fullName : (user?.username)}
+              </span>
+              {isDemoMode && (
+                <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
+                  Demo Mode
+                </span>
+              )}
+            </div>
+          {/* <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.fullName || user?.username}</span> */}
             <Button
   variant="ghost"
   size="icon"
@@ -219,12 +233,12 @@ export default function HomePage() {
 </Button>
         <Button
           variant="outline"
-          onClick={() => logoutMutation.mutate()}
+          onClick={() => isDemoMode ? exitDemoMode() : logoutMutation.mutate()}
           disabled={logoutMutation.isPending}
           className="backdrop-blur-sm bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 border-0 text-black dark:text-white"
         >
           {logoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Logout
+          {isDemoMode ? "Exit Demo" : "Logout"}
         </Button>
           </div>
         </div>
