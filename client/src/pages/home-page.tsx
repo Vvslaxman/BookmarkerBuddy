@@ -7,13 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, Trash2, Tag, Edit2, BarChart2, Clock, Star, Filter } from "lucide-react";
+import { Loader2, Plus, Search, Trash2, Tag, Edit2, BarChart2, Clock, Star, Filter, LogOut } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Moon, Sun } from "lucide-react";
 import type { Bookmark } from "@shared/schema";
+import { useDemo } from "@/hooks/use-demo";
+import { useLocation } from "wouter";
+// Removed DemoProvider import; useDemo is sufficient
 
 type BookmarkStats = {
   totalBookmarks: number;
@@ -24,7 +27,9 @@ type BookmarkStats = {
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
+  const { isDemoMode, demoBookmarks, addDemoBookmark, updateDemoBookmark, deleteDemoBookmark } = useDemo();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
   const [newTag, setNewTag] = useState("");
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
@@ -36,49 +41,71 @@ export default function HomePage() {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  //const { isDemoMode, demoUser, exitDemoMode } = useDemo();
 
-  const { data: bookmarks, isLoading } = useQuery<Bookmark[]>({
+  const { data: fetchedBookmarks, isLoading } = useQuery<Bookmark[]>({
     queryKey: ["/api/bookmarks"],
+    enabled: !isDemoMode,
   });
+
+  const bookmarks = isDemoMode ? demoBookmarks : fetchedBookmarks;
 
   const createMutation = useMutation({
     mutationFn: async (bookmark: typeof newBookmark) => {
+      if (isDemoMode) {
+        addDemoBookmark(bookmark);
+        return bookmark;
+      }
       const res = await apiRequest("POST", "/api/bookmarks", bookmark);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bookmarks"] });
+      if (!isDemoMode) {
+        queryClient.invalidateQueries({ queryKey: ["/api/bookmarks"] });
+      }
       setIsDialogOpen(false);
       setNewBookmark({ url: "", title: "", description: "", tags: [] });
       toast({
         title: "Success",
-        description: "Bookmark created successfully",
+        description: isDemoMode ? "Demo bookmark created!" : "Bookmark created successfully",
       });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async (bookmark: Partial<Bookmark>) => {
+      if (isDemoMode) {
+        updateDemoBookmark(bookmark.id!, bookmark);
+        return bookmark;
+      }
       const res = await apiRequest("PATCH", `/api/bookmarks/${bookmark.id}`, bookmark);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bookmarks"] });
+      if (!isDemoMode) {
+        queryClient.invalidateQueries({ queryKey: ["/api/bookmarks"] });
+      }
       setIsDialogOpen(false);
       setEditingBookmark(null);
       toast({
         title: "Success",
-        description: "Bookmark updated successfully",
+        description: isDemoMode ? "Demo bookmark updated!" : "Bookmark updated successfully",
       });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
+      if (isDemoMode) {
+        deleteDemoBookmark(id);
+        return;
+      }
       await apiRequest("DELETE", `/api/bookmarks/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bookmarks"] });
+      if (!isDemoMode) {
+        queryClient.invalidateQueries({ queryKey: ["/api/bookmarks"] });
+      }
       toast({
         title: "Success",
         description: "Bookmark deleted successfully",
@@ -86,9 +113,28 @@ export default function HomePage() {
     },
   });
 
-  const { data: stats, isLoading: isStatsLoading } = useQuery<BookmarkStats>({
+  const { data: fetchedStats, isLoading: isStatsLoading } = useQuery<BookmarkStats>({
     queryKey: ["/api/bookmarks/stats"],
+    enabled: !isDemoMode,
   });
+
+  // Generate demo stats
+  const demoStats: BookmarkStats = useMemo(() => {
+    if (!isDemoMode || !demoBookmarks) return { totalBookmarks: 0, mostAccessed: [], recentlyCreated: [], recentlyAccessed: [] };
+    
+    const sortedByAccess = [...demoBookmarks].sort((a, b) => b.accessCount - a.accessCount);
+    const sortedByCreated = [...demoBookmarks].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const sortedByAccessed = [...demoBookmarks].sort((a, b) => new Date(b.lastAccessedAt).getTime() - new Date(a.lastAccessedAt).getTime());
+
+    return {
+      totalBookmarks: demoBookmarks.length,
+      mostAccessed: sortedByAccess.slice(0, 3),
+      recentlyCreated: sortedByCreated.slice(0, 3),
+      recentlyAccessed: sortedByAccessed.slice(0, 3),
+    };
+  }, [isDemoMode, demoBookmarks]);
+
+  const stats = isDemoMode ? demoStats : fetchedStats;
 
   const handleTagAdd = (formState: typeof newBookmark | Bookmark) => {
     if (!newTag.trim()) return;
@@ -176,8 +222,8 @@ export default function HomePage() {
   const allTags = useMemo(() => {
     if (!bookmarks) return [];
     const tagSet = new Set<string>();
-    bookmarks.forEach(bookmark => {
-      bookmark.tags.forEach(tag => tagSet.add(tag));
+    (bookmarks as Bookmark[]).forEach((bookmark: Bookmark) => {
+      bookmark.tags.forEach((tag: string) => tagSet.add(tag));
     });
     return Array.from(tagSet);
   }, [bookmarks]);
@@ -185,14 +231,14 @@ export default function HomePage() {
   // Filter bookmarks based on search and tags
   const filteredBookmarks = useMemo(() => {
     if (!bookmarks) return [];
-    return bookmarks.filter(bookmark => {
+    return (bookmarks as Bookmark[]).filter((bookmark: Bookmark) => {
       const matchesSearch = !search ||
         bookmark.title.toLowerCase().includes(search.toLowerCase()) ||
         bookmark.description?.toLowerCase().includes(search.toLowerCase()) ||
-        bookmark.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()));
+        bookmark.tags.some((tag: string) => tag.toLowerCase().includes(search.toLowerCase()));
 
       const matchesTags = selectedTags.length === 0 ||
-        selectedTags.every(tag => bookmark.tags.includes(tag));
+        selectedTags.every((tag: string) => bookmark.tags.includes(tag));
 
       return matchesSearch && matchesTags;
     });
@@ -206,8 +252,10 @@ export default function HomePage() {
             BookmarkerBuddy
           </h1>
           <div className="flex items-center gap-4">
-          <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.fullName || user?.username}</span>
-            <Button
+            {isDemoMode ? (
+              <>
+                <span className="text-muted-foreground text-sm sm:text-base">Demo Mode - Recruiter View</span>
+                <Button
   variant="ghost"
   size="icon"
   onClick={() => document.documentElement.classList.toggle('dark')}
@@ -217,17 +265,61 @@ export default function HomePage() {
   <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 dark:text-white text-black" />
   <span className="sr-only">Toggle theme</span>
 </Button>
-        <Button
-          variant="outline"
-          onClick={() => logoutMutation.mutate()}
-          disabled={logoutMutation.isPending}
-          className="backdrop-blur-sm bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 border-0 text-black dark:text-white"
-        >
-          {logoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Logout
-        </Button>
-          </div>
-        </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    toast({
+                      title: "Thanks recruiter! 🙏",
+                      description: "I hope you liked it! See you again if you create an account!",
+                      duration: 5000,
+                    });
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 3000);
+                  }}
+                  className="backdrop-blur-sm bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 border-0 text-black dark:text-white"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Exit Demo Mode
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.username}</span>
+                <Button
+  variant="ghost"
+  size="icon"
+  onClick={() => document.documentElement.classList.toggle('dark')}
+  className="h-8 w-8 border-2 border-gray-300 dark:border-gray-600 rounded-full hover:border-primary focus:ring-2 focus:ring-primary transition-all"
+>
+  <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+  <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 dark:text-white text-black" />
+  <span className="sr-only">Toggle theme</span>
+</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                  className="backdrop-blur-sm bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 border-0 text-black dark:text-white"
+                >
+                  {logoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Logout
+                </Button>
+              </>
+            )}
+          {/* <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-4">
+              <span className="text-muted-foreground text-sm sm:text-base">
+                Welcome, {isDemoMode ? demoUser?.fullName : (user?.username)}
+              </span>
+              {isDemoMode && (
+                <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
+                  Demo Mode
+                </span>
+              )} */}
+            </div>
+            </div>
+          {/* <span className="text-muted-foreground text-sm sm:text-base">Welcome, {user?.fullName || user?.username}</span> */}
+            
       </header>
 
       <main className="container mx-auto px-4 py-8">
@@ -248,7 +340,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {stats?.mostAccessed.slice(0, 3).map(bookmark => (
+                {stats?.mostAccessed.slice(0, 3).map((bookmark: Bookmark) => (
                   <div key={bookmark.id} className="text-sm">
                     <a href={bookmark.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                       {bookmark.title}
@@ -449,7 +541,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {filteredBookmarks.map((bookmark) => (
+            {filteredBookmarks.map((bookmark: Bookmark) => (
               <Card key={bookmark.id} className="backdrop-blur-sm bg-white/10 border-0 shadow-xl hover:shadow-2xl transition-all overflow-hidden">
                 <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4">
                   <div className="flex-1 min-w-0">
@@ -494,7 +586,7 @@ export default function HomePage() {
                     </p>
                   )}
                   <div className="flex flex-wrap gap-1.5">
-                    {bookmark.tags.map((tag, i) => (
+                    {bookmark.tags.map((tag: string, i: number) => (
                       <Badge key={i} variant="secondary" className="bg-primary/10 text-xs whitespace-nowrap">
                         {tag}
                       </Badge>

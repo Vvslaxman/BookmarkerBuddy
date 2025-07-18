@@ -7,11 +7,43 @@ import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
+import { useDemo } from "@/hooks/use-demo";
+import { useDemoContext } from "@/contexts/demo-context";
+
+function DemoModeButton() {
+  const { setDemoMode } = useDemoContext();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  const handleDemoMode = () => {
+    setDemoMode(true);
+    toast({
+      title: "Welcome, Recruiter! 👋",
+      description: "You're now in demo mode. Feel free to explore all features!",
+      duration: 5000,
+    });
+    setLocation("/home");
+  };
+
+  return (
+    <Button
+      onClick={handleDemoMode}
+      variant="secondary"
+      className="w-full"
+    >
+      <Eye className="mr-2 h-4 w-4" />
+      Enter Demo Mode
+    </Button>
+  );
+}
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const { isDemoMode, enterDemoMode } = useDemo();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ 
     username: "", 
     email: "", 
@@ -19,11 +51,20 @@ export default function AuthPage() {
     password: "" 
   });
 
-  if (user) {
+  if (user || isDemoMode) {
     setLocation("/");
     return null;
   }
 
+  const handleDemoMode = () => {
+    enterDemoMode();
+    toast({
+      title: "You are a recruiter, welcome!",
+      description: "You're now in demo mode. Feel free to explore all features!",
+      duration: 5000,
+    });
+    setLocation("/");
+  };
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       <div className="flex items-center justify-center p-8">
@@ -137,6 +178,9 @@ export default function AuthPage() {
                 </form>
               </TabsContent>
             </Tabs>
+            <Button variant="secondary" className="w-full mt-4" onClick={handleDemoMode}>
+              Enter Demo Mode-Recruiters Only
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -6,9 +6,10 @@ import { AuthProvider } from "./hooks/use-auth";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
-import { ProtectedRoute } from "./lib/protected-route";
+import {ProtectedRoute}  from "./lib/protected-route";
 import { ThemeProvider } from "./contexts/theme-context"; 
 import { ThemeToggle } from "./components/theme-toggle";
+import { DemoProvider } from "./hooks/use-demo"
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <DemoProvider>
       <AuthProvider>
         <ThemeProvider>
           <div className="relative min-h-screen">
@@ -34,8 +36,8 @@ function App() {
           </div>
         </ThemeProvider>
       </AuthProvider>
-    </QueryClientProvider>
-  );
+      </DemoProvider>
+      </QueryClientProvider>
+  )
 }
-
 export default App;
