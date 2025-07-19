@@ -41,7 +41,7 @@ export default function HomePage() {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  //const { isDemoMode, demoUser, exitDemoMode } = useDemo();
+  const {demoUser, exitDemoMode } = useDemo();
 
   const { data: fetchedBookmarks, isLoading } = useQuery<Bookmark[]>({
     queryKey: ["/api/bookmarks"],
@@ -268,14 +268,15 @@ export default function HomePage() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    toast({
-                      title: "Thanks recruiter! 🙏",
-                      description: "I hope you liked it! See you again if you create an account!",
-                      duration: 5000,
-                    });
+                    exitDemoMode(); 
                     setTimeout(() => {
-                      window.location.reload();
-                    }, 3000);
+                      toast({
+                        title: "Thanks recruiter! 🙏",
+                        description: "I hope you liked it! See you again if you create an account!",
+                        duration: 5000,
+                      });
+                    }, 100);
+                    
                   }}
                   className="backdrop-blur-sm bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 border-0 text-black dark:text-white"
                 >
