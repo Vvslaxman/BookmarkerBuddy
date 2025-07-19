@@ -11,32 +11,7 @@ import { Loader2, Eye } from "lucide-react";
 import { useDemo } from "@/hooks/use-demo";
 import { useDemoContext } from "@/contexts/demo-context";
 
-function DemoModeButton() {
-  const { setDemoMode } = useDemoContext();
-  const { toast } = useToast();
-  const [, setLocation] = useLocation();
 
-  const handleDemoMode = () => {
-    setDemoMode(true);
-    toast({
-      title: "Welcome, Recruiter! 👋",
-      description: "You're now in demo mode. Feel free to explore all features!",
-      duration: 5000,
-    });
-    setLocation("/home");
-  };
-
-  return (
-    <Button
-      onClick={handleDemoMode}
-      variant="secondary"
-      className="w-full"
-    >
-      <Eye className="mr-2 h-4 w-4" />
-      Enter Demo Mode
-    </Button>
-  );
-}
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
